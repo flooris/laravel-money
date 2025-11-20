@@ -22,7 +22,7 @@ class MoneyCast implements CastsAttributes
             return [$key => $value];
         }
 
-        $money = $value instanceof Money ? $value : new Money($value, $this->determineCurrency($attributes));
+        $money  = $value instanceof Money ? $value : new Money($value, $this->determineCurrency($attributes));
         $amount = (int)$money->getAmount();
 
         if (array_key_exists($this->currency, $attributes)) {
@@ -36,8 +36,22 @@ class MoneyCast implements CastsAttributes
     {
         if ($this->currency) {
             $currencyCode = $attributes[$this->currency] ?? $this->currency;
-            $currency = new Currency($currencyCode);
-            $currencies = Money::getCurrencies();
+            $currency     = new Currency($currencyCode);
+            $currencies   = Money::getCurrencies();
+
+            if ($currencies->contains($currency)) {
+                return $currency;
+            }
+        }
+
+        $defaultCurrencyAttribute = config('money.default_currency_attribute');
+
+        if ($defaultCurrencyAttribute &&
+            isset($attributes[$defaultCurrencyAttribute])
+        ) {
+            $currencyCode = $attributes[$defaultCurrencyAttribute];
+            $currency     = new Currency($currencyCode);
+            $currencies   = Money::getCurrencies();
 
             if ($currencies->contains($currency)) {
                 return $currency;
